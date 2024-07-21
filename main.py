@@ -2,6 +2,7 @@ import numpy as np
 from scipy.ndimage import binary_dilation
 import cv2
 
+
 # Función para la reconstrucción de la imagen
 def morphological_reconstruction(marker, mask):
     """
@@ -41,7 +42,6 @@ def generate_marker(binary_image):
     marker[-1, :] = inverted_image[-1, :]
     marker[:, 0] = inverted_image[:, 0]
     marker[:, -1] = inverted_image[:, -1]
-
     return marker
 
 
@@ -70,7 +70,7 @@ def operacion_nor(imagen1, imagen2):
 def invertir_imagen(imagen):
     return cv2.bitwise_not(imagen)
 
-
+#NO TOCAR YA FUNCIONAN
 def genImagenA(imagen): 
     resultado = None
     marker = generate_marker(imagen)
@@ -101,11 +101,86 @@ def genImagenB(imagen):
     
     return resultado
 
-def genImagenAux(imagen):
+
+def genImagenC(img0, imgB):
+    imgA = genImagenA(img0)
+
+    # Rellenar los huecos de la imagen A
+    imgAwithFilledHoles = operacion_xor(imgA, imgB)
+
+    not_B = invertir_imagen(imgB)
+
+    # Reconstruir las islas y las pistas que forman un agujero bien construido de not_B
+    rec = morphological_reconstruction(not_B ,imgAwithFilledHoles)
+    rec = (rec * 255).astype(np.uint8)
+    # Rellenar las pistas y las islas que se formaron con la reconstrucción
+    result = operacion_and(rec, imgB)
+    return result
+#NO TOCAR YA FUNCIONAN
+
+
+
+def genImagenD(imagen):
     resultado = None
     imagenA = genImagenA(imagen)
-    resultado = invertir_imagen(imagenA - imagen)
+    imagenB = genImagenB(imagen)
+    imagenAuxiliar = genImagenAux(imagen)
+    # imagen sin islas ni pistas
+    imagenSinIslasNiPistas = imagen + invertir_imagen(imagenB)
+    marker = generate_marker(imagenSinIslasNiPistas)
+    fondoEliminado = morphological_reconstruction(marker,imagenSinIslasNiPistas)
+    fondoEliminado = (fondoEliminado * 255).astype(np.uint8)
+    resultado = operacion_or(fondoEliminado, imagenB)
+    pistasEncerradas = resultado
+    #hasta aca 114 todo bien
+    resultado = operacion_xor(imagenA,resultado)
+    resultado = eliminar_no_agujeros_completos(resultado)
+#    resultado = morphological_reconstruction()
+#    resultado = (resultado * 255).astype(np.uint8)
+#    resultado = invertir_imagen(resultado)
+#    resultado = morphological_reconstruction(resultado,imagenAuxiliar)
+#    resultado = (resultado * 255).astype(np.uint8)
+#    resultado = genImagenA(resultado)
+#    resultado = resultado + pistasEncerradas
+#       resultado = resultado - imagenA
+#    resultado = morphological_reconstruction(resultado,invertir_imagen(imagenSinIslasNiPistas))
+#    resultado = resultado + invertir_imagen(genImagenA(imagen))
     return resultado
+
+
+def genImagenAux(imagen):
+    resultado = None
+    imagenB = genImagenB(imagen)
+    # imagen sin islas ni pistas
+    imagenAux = imagen + invertir_imagen(imagenB)
+    resultado = imagenAux
+    return resultado
+
+
+
+def eliminar_no_agujeros_completos(imagen):
+    """
+    Elimina de una imagen los elementos que no son agujeros completos.
+    
+    :param imagen: Imagen en blanco y negro.
+    :return: Imagen con solo los agujeros completos.
+    """
+    # Convertir la imagen a binaria
+    _, binaria = cv2.threshold(imagen, 127, 1, cv2.THRESH_BINARY)
+    
+    # Invertir la imagen para que los agujeros sean blancos (1) y el fondo negro (0)
+    invertida = invertir_imagen(binaria)
+    
+    # Crear un marcador inicial con los bordes de la imagen invertida
+    marker = generate_marker(invertida)
+    
+    # Realizar la reconstrucción morfológica
+    reconstruida = morphological_reconstruction(marker, invertida)
+    # Invertir la imagen reconstruida para obtener los agujeros completos
+    agujeros_completos = invertir_imagen(reconstruida)
+    
+    # Convertir la imagen de agujeros completos a formato 8-bit para visualización   
+    return agujeros_completos
 
 # Ejemplo de uso
 if __name__ == "__main__":
@@ -113,11 +188,19 @@ if __name__ == "__main__":
 
     imagenA = genImagenA(imagen)
     imagenB = genImagenB(imagen)
+    imagenC = genImagenC(imagen,imagenB)
+    imagenD = genImagenD(imagen)
     imagenAux = genImagenAux(imagen)
+    
     # Mostrar resultados
-    cv2.imshow('Imagen Original', imagen)
+#    cv2.imshow('Imagen Original', imagen)
     cv2.imshow('Imagen A', imagenA)
+    cv2.imwrite('ImagenA.png',imagenA)
     cv2.imshow('Imagen B', imagenB)
-#    cv2.imshow('Imagen Aux', imagenAux)
+    cv2.imwrite('ImagenB.png',imagenB)
+    cv2.imshow('Imagen C', imagenC)
+    cv2.imwrite('ImagenC.png',imagenC)
+    cv2.imshow('Imagen D', imagenD)
+    cv2.imwrite('ImagenD.png',imagenD)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
