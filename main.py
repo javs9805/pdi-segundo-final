@@ -74,15 +74,14 @@ def invertir_imagen(imagen):
 def genImagenA(imagen): 
     resultado = None
     marker = generate_marker(imagen)
-
     # Llamar a la función de reconstrucción morfológica
-    reconstructed = morphological_reconstruction(marker,invertir_imagen(imagen))
+    reconstructed = morphological_reconstruction(marker,imagen)
 
 
     # Calcular el complemento y Convertir la imagen reconstruida a formato 8-bit para visualización
-    rellenada = (255- reconstructed * 255).astype(np.uint8)
+    rellenada = (reconstructed * 255).astype(np.uint8)
     
-    resultado = operacion_nand(imagen, rellenada)
+    resultado = invertir_imagen(imagen - operacion_and(imagen, rellenada))
     
     return resultado
 
@@ -119,6 +118,6 @@ if __name__ == "__main__":
     cv2.imshow('Imagen Original', imagen)
     cv2.imshow('Imagen A', imagenA)
     cv2.imshow('Imagen B', imagenB)
-    cv2.imshow('Imagen Aux', imagenAux)
+#    cv2.imshow('Imagen Aux', imagenAux)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
