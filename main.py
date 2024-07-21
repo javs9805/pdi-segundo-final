@@ -119,32 +119,8 @@ def genImagenC(img0, imgB):
 #NO TOCAR YA FUNCIONAN
 
 
-
-def genImagenD(imagen):
-    resultado = None
-    imagenA = genImagenA(imagen)
-    imagenB = genImagenB(imagen)
-    imagenAuxiliar = genImagenAux(imagen)
-    # imagen sin islas ni pistas
-    imagenSinIslasNiPistas = imagen + invertir_imagen(imagenB)
-    marker = generate_marker(imagenSinIslasNiPistas)
-    fondoEliminado = morphological_reconstruction(marker,imagenSinIslasNiPistas)
-    fondoEliminado = (fondoEliminado * 255).astype(np.uint8)
-    resultado = operacion_or(fondoEliminado, imagenB)
-    pistasEncerradas = resultado
-    #hasta aca 114 todo bien
-    resultado = operacion_xor(imagenA,resultado)
-    resultado = eliminar_no_agujeros_completos(resultado)
-#    resultado = morphological_reconstruction()
-#    resultado = (resultado * 255).astype(np.uint8)
-#    resultado = invertir_imagen(resultado)
-#    resultado = morphological_reconstruction(resultado,imagenAuxiliar)
-#    resultado = (resultado * 255).astype(np.uint8)
-#    resultado = genImagenA(resultado)
-#    resultado = resultado + pistasEncerradas
-#       resultado = resultado - imagenA
-#    resultado = morphological_reconstruction(resultado,invertir_imagen(imagenSinIslasNiPistas))
-#    resultado = resultado + invertir_imagen(genImagenA(imagen))
+def getImagenD(imagen,imagenC):
+    resultado = imagenC - imagen
     return resultado
 
 
@@ -189,7 +165,7 @@ if __name__ == "__main__":
     imagenA = genImagenA(imagen)
     imagenB = genImagenB(imagen)
     imagenC = genImagenC(imagen,imagenB)
-    imagenD = genImagenD(imagen)
+    imagenD = getImagenD(imagen,imagenC)
     imagenAux = genImagenAux(imagen)
     
     # Mostrar resultados
