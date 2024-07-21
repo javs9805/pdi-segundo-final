@@ -71,7 +71,7 @@ def invertir_imagen(imagen):
     return cv2.bitwise_not(imagen)
 
 
-def genImagenA(imagen):
+def genImagenA(imagen): 
     resultado = None
     marker = generate_marker(imagen)
 
@@ -110,7 +110,7 @@ def genImagenAux(imagen):
 
 # Ejemplo de uso
 if __name__ == "__main__":
-    imagen = cv2.imread('PlacaCircuitoImpreso.bmp', cv2.IMREAD_GRAYSCALE)
+    imagen = cv2.imread('PlacaCircuito.bmp', cv2.IMREAD_GRAYSCALE)
 
     imagenA = genImagenA(imagen)
     imagenB = genImagenB(imagen)
